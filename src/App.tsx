@@ -169,11 +169,11 @@ export default function App() {
           </button>
           <div className="hidden text-sm text-muted-foreground xl:block">Workspace de {data.trainer.name}</div>
           <div className="flex items-center gap-2">
-            <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setView("assessment")}>
+            <Button type="button" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setView("assessment")}>
               <Activity className="size-4" />
               Nova avaliacao
             </Button>
-            <Button variant="outline" size="icon" onClick={logout} title="Sair">
+            <Button type="button" variant="outline" size="icon" onClick={logout} title="Sair">
               <LogOut className="size-4" />
             </Button>
           </div>
@@ -209,6 +209,7 @@ export default function App() {
 function AuthScreen({ onAuthenticated }: { onAuthenticated: () => void }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -216,23 +217,29 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: () => void }) {
     const email = String(form.get("email") ?? "").trim();
     const password = String(form.get("password") ?? "");
     const name = String(form.get("name") ?? "").trim();
+    setMessage("");
     setLoading(true);
     try {
       if (mode === "login") {
+        setMessage("Validando acesso no Supabase...");
         await signIn(email, password);
         toast.success("Login realizado.");
         onAuthenticated();
       } else if (mode === "signup") {
+        setMessage("Criando perfil profissional...");
         const hasSession = await signUp(name, email, password);
         toast.success(hasSession ? "Conta criada e sincronizada." : "Conta criada. Confirme seu e-mail antes de entrar.");
         if (hasSession) onAuthenticated();
         else setMode("login");
       } else {
+        setMessage("Enviando link de recuperacao...");
         await resetPassword(email);
         toast.success("E-mail de recuperacao enviado.");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel autenticar.");
+      const errorMessage = error instanceof Error ? error.message : "Nao foi possivel autenticar.";
+      setMessage(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -278,7 +285,8 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: () => void }) {
                 {mode === "signup" ? <Field label="Nome do personal" name="name" required /> : null}
                 <Field label="E-mail" name="email" type="email" required />
                 {mode !== "reset" ? <Field label="Senha" name="password" type="password" minLength={6} required /> : null}
-                <Button className="h-11 gap-2 bg-blue-600 text-white hover:bg-blue-500" disabled={loading}>
+                {message ? <p className="rounded-md border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-100">{message}</p> : null}
+                <Button type="submit" className="h-11 gap-2 bg-blue-600 text-white hover:bg-blue-500" disabled={loading}>
                   {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
                   {mode === "login" ? "Entrar" : mode === "signup" ? "Criar conta" : "Enviar link"}
                 </Button>
@@ -317,7 +325,7 @@ function Dashboard({ data, onView }: { data: AppData; onView: (view: View) => vo
           <h1 className="text-3xl font-black tracking-tight md:text-4xl">Dashboard do personal</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">Acompanhe evolucao real dos alunos e gere relatórios profissionais.</p>
         </div>
-        <Button size="lg" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => onView("assessment")}>
+        <Button type="button" size="lg" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => onView("assessment")}>
           <Activity className="size-4" />
           Nova avaliacao
         </Button>
@@ -376,7 +384,7 @@ function StudentsPage({ data, onRefresh, onOpenStudent }: { data: AppData; onRef
           <h1 className="text-3xl font-black tracking-tight">Alunos</h1>
           <p className="text-muted-foreground">Base real sincronizada com Supabase.</p>
         </div>
-        <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setEditing(createEmptyStudent(data.trainer.id))}>
+        <Button type="button" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setEditing(createEmptyStudent(data.trainer.id))}>
           <Plus className="size-4" />
           Novo aluno
         </Button>
@@ -414,9 +422,9 @@ function StudentsPage({ data, onRefresh, onOpenStudent }: { data: AppData; onRef
                     <TableCell>{student.height} m</TableCell>
                     <TableCell>{student.initialWeight} kg</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => onOpenStudent(student.id)}>Historico</Button>
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(student)}><Edit className="size-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={async () => { await deleteStudent(student.id); await onRefresh(); toast.success("Aluno removido."); }}>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => onOpenStudent(student.id)}>Historico</Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setEditing(student)}><Edit className="size-4" /></Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={async () => { await deleteStudent(student.id); await onRefresh(); toast.success("Aluno removido."); }}>
                         <Trash2 className="size-4 text-red-500" />
                       </Button>
                     </TableCell>
@@ -458,7 +466,7 @@ function StudentEditor({ student, onClose, onSaved }: { student: Student; onClos
           <CardTitle>{form.id ? "Editar aluno" : "Novo aluno"}</CardTitle>
           <CardDescription>Preencha dados reais do aluno.</CardDescription>
         </div>
-        <Button variant="outline" onClick={onClose}>Fechar</Button>
+        <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
@@ -480,7 +488,7 @@ function StudentEditor({ student, onClose, onSaved }: { student: Student; onClos
             <Label>Restricoes</Label>
             <Textarea value={form.restrictions} onChange={(event) => setForm({ ...form, restrictions: event.target.value })} />
           </div>
-          <Button className="bg-blue-600 text-white hover:bg-blue-700 md:col-span-2" disabled={saving}>
+          <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 md:col-span-2" disabled={saving}>
             {saving ? "Salvando..." : "Salvar aluno"}
           </Button>
         </form>
@@ -573,8 +581,8 @@ function AssessmentPage({ data, onSaved, onReport }: { data: AppData; onSaved: (
             <AutoMetric label="Massa magra" value={`${leanMass.toFixed(1)} kg`} />
             <AutoMetric label="Massa gorda" value={`${fatMass.toFixed(1)} kg`} />
             <AutoMetric label="Soma 7 dobras" value={`${skinfoldTotal.toFixed(1)} mm`} />
-            <Button disabled={saving} onClick={() => submit(false)} className="mt-2 gap-2 bg-blue-600 text-white hover:bg-blue-700"><Save className="size-4" /> Salvar avaliacao</Button>
-            <Button disabled={saving} onClick={() => submit(true)} variant="outline" className="gap-2">Gerar relatorio <ArrowRight className="size-4" /></Button>
+            <Button type="button" disabled={saving} onClick={() => submit(false)} className="mt-2 gap-2 bg-blue-600 text-white hover:bg-blue-700"><Save className="size-4" /> Salvar avaliacao</Button>
+            <Button type="button" disabled={saving} onClick={() => submit(true)} variant="outline" className="gap-2">Gerar relatorio <ArrowRight className="size-4" /></Button>
           </CardContent>
         </Card>
       </div>
@@ -595,7 +603,7 @@ function StudentHistory({ student, assessments, onBack, onReport }: { student: S
           <h1 className="text-3xl font-black tracking-tight">{student.name}</h1>
           <p className="text-muted-foreground">{student.goal} | {student.weeklyFrequency} treino(s)/semana</p>
         </div>
-        <Button variant="outline" onClick={onBack}>Voltar</Button>
+        <Button type="button" variant="outline" onClick={onBack}>Voltar</Button>
       </div>
       <section className="grid gap-4 md:grid-cols-4">
         <Metric title="Avaliacoes" value={String(ordered.length)} detail="registros" icon={Activity} />
@@ -633,7 +641,7 @@ function StudentHistory({ student, assessments, onBack, onReport }: { student: S
               </TableBody>
             </Table>
           ) : <EmptyState title="Sem avaliações" description="Registre a primeira avaliação deste aluno." />}
-          {first && second ? <Button className="mt-4 bg-blue-600 text-white hover:bg-blue-700" onClick={() => onReport({ student, first, second })}>Comparar ultimos</Button> : null}
+          {first && second ? <Button type="button" className="mt-4 bg-blue-600 text-white hover:bg-blue-700" onClick={() => onReport({ student, first, second })}>Comparar ultimos</Button> : null}
         </CardContent>
       </Card>
     </div>
@@ -664,7 +672,7 @@ function ReportsPage({ data, selected, onSelect, onRefresh }: { data: AppData; s
               </CardHeader>
               <CardContent>
                 {first && second ? (
-                  <Button className="w-full bg-blue-600 text-white hover:bg-blue-700" onClick={() => onSelect({ student, first, second })}>Comparar ultimos</Button>
+                  <Button type="button" className="w-full bg-blue-600 text-white hover:bg-blue-700" onClick={() => onSelect({ student, first, second })}>Comparar ultimos</Button>
                 ) : <p className="text-sm text-muted-foreground">Precisa de pelo menos 2 avaliações.</p>}
               </CardContent>
             </Card>
@@ -683,7 +691,7 @@ function ReportsPage({ data, selected, onSelect, onRefresh }: { data: AppData; s
               </CardHeader>
               <CardContent>
                 <p className="mb-4 line-clamp-3 text-sm text-muted-foreground">{report.professionalAnalysis}</p>
-                <Button className="w-full" variant="outline" onClick={() => onSelect({ student, first, second, report })}>Abrir salvo</Button>
+                <Button type="button" className="w-full" variant="outline" onClick={() => onSelect({ student, first, second, report })}>Abrir salvo</Button>
               </CardContent>
             </Card>
           );
@@ -761,8 +769,8 @@ function ReportView({ data, payload, onBack, onRefresh }: { data: AppData; paylo
           <p className="text-muted-foreground">{payload.student.name} | {formatDate(payload.first.date)} x {formatDate(payload.second.date)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={onBack}>Voltar</Button>
-          <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={persist}>Salvar relatorio</Button>
+          <Button type="button" variant="outline" onClick={onBack}>Voltar</Button>
+          <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={persist}>Salvar relatorio</Button>
           <ReportExportActions targetId="fitness-report" message={`Relatorio de ${payload.student.name}`} reportData={pdfData} />
         </div>
       </div>
@@ -844,7 +852,7 @@ function ProfilePage({ trainer, onRefresh }: { trainer: Trainer; onRefresh: () =
           <ControlledField label="Cor secundaria" type="color" value={form.brandSecondary} onChange={(value) => setForm({ ...form, brandSecondary: value })} />
           <div className="grid gap-2 md:col-span-2"><Label>Frase motivacional</Label><Textarea value={form.motivationalPhrase} onChange={(event) => setForm({ ...form, motivationalPhrase: event.target.value })} /></div>
           <div className="grid gap-2 md:col-span-2"><Label>Assinatura no relatorio</Label><Textarea value={form.reportSignature} onChange={(event) => setForm({ ...form, reportSignature: event.target.value })} /></div>
-          <Button className="bg-blue-600 text-white hover:bg-blue-700 md:col-span-2" disabled={saving} onClick={persist}>Salvar perfil</Button>
+          <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700 md:col-span-2" disabled={saving} onClick={persist}>Salvar perfil</Button>
         </CardContent>
       </Card>
     </div>
@@ -853,7 +861,7 @@ function ProfilePage({ trainer, onRefresh }: { trainer: Trainer; onRefresh: () =
 
 function NavButton({ view, current, icon: Icon, label, onClick }: { view: View; current: View; icon: typeof BarChart3; label: string; onClick: (view: View) => void }) {
   return (
-    <Button variant={view === current ? "secondary" : "ghost"} className="h-11 justify-start gap-3 rounded-md" onClick={() => onClick(view)}>
+    <Button type="button" variant={view === current ? "secondary" : "ghost"} className="h-11 justify-start gap-3 rounded-md" onClick={() => onClick(view)}>
       <Icon className="size-4" />
       {label}
     </Button>
