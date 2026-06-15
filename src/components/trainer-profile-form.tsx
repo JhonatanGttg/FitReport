@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Palette, Save, UserRoundCog } from "lucide-react";
+import { BadgeCheck, Palette, Save, UserRoundCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { updateTrainerAction } from "@/app/dashboard/perfil/actions";
 import { useTrainerProfile } from "@/lib/trainer-profile-store";
 import type { Trainer } from "@/lib/types";
@@ -17,7 +18,7 @@ export function TrainerProfileForm({ initialTrainer }: { initialTrainer: Trainer
   const [isPending, startTransition] = useTransition();
   const { saveTrainer } = useTrainerProfile();
 
-  function update(key: keyof Trainer, value: string) {
+  function update<K extends keyof Trainer>(key: K, value: Trainer[K]) {
     setTrainer((current) => ({ ...current, [key]: value }));
   }
 
@@ -65,6 +66,16 @@ export function TrainerProfileForm({ initialTrainer }: { initialTrainer: Trainer
               <Label>Assinatura no relatorio</Label>
               <Textarea value={trainer.reportSignature} onChange={(event) => update("reportSignature", event.target.value)} />
             </div>
+            <label className="flex items-center justify-between gap-4 rounded-md border p-3 md:col-span-2">
+              <span>
+                <span className="flex items-center gap-2 font-bold">
+                  <BadgeCheck className="size-4 text-blue-500" />
+                  Onboarding concluido
+                </span>
+                <span className="text-sm text-muted-foreground">Ative quando marca, contatos e assinatura estiverem prontos.</span>
+              </span>
+              <Switch checked={trainer.onboardingCompleted} onCheckedChange={(checked) => update("onboardingCompleted", checked)} />
+            </label>
             <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-700 md:col-span-2" disabled={isPending} onClick={save}>
               <Save className="size-4" />
               {isPending ? "Salvando..." : "Salvar perfil"}

@@ -56,6 +56,11 @@ async function main() {
       brandSecondary: trainer.brandSecondary,
       motivationalPhrase: trainer.motivationalPhrase,
       reportSignature: trainer.reportSignature,
+      onboardingCompleted: trainer.onboardingCompleted,
+      plan: trainer.plan,
+      subscriptionStatus: trainer.subscriptionStatus,
+      stripeCustomerId: trainer.stripeCustomerId,
+      stripeSubscriptionId: trainer.stripeSubscriptionId,
     },
   });
 
@@ -74,6 +79,14 @@ async function main() {
         height: student.height,
         initialWeight: student.initialWeight,
         photoUrl: student.photoUrl,
+        progressFrontUrl: student.progressFrontUrl,
+        progressSideUrl: student.progressSideUrl,
+        progressBackUrl: student.progressBackUrl,
+        goal: student.goal,
+        trainingLevel: student.trainingLevel,
+        weeklyFrequency: student.weeklyFrequency,
+        restrictions: student.restrictions,
+        clinicalNotes: student.clinicalNotes,
         notes: student.notes,
       },
     });
@@ -125,17 +138,27 @@ async function main() {
   const ana = demoData.students[0];
   const first = demoData.assessments[0];
   const second = demoData.assessments[1];
+  const analysis = generateProfessionalAnalysis(ana, first, second);
   await db.insert(reports).values({
     id: ids.report,
     trainerId: ids.trainer,
     studentId: ids.students[ana.id as keyof typeof ids.students],
     firstAssessmentId: ids.assessments[first.id as keyof typeof ids.assessments],
     secondAssessmentId: ids.assessments[second.id as keyof typeof ids.assessments],
-    professionalAnalysis: generateProfessionalAnalysis(ana, first, second).analysis,
+    template: "premium",
+    professionalAnalysis: analysis.analysis,
+    improved: JSON.stringify(analysis.improved),
+    worsened: JSON.stringify(analysis.worsened),
+    needs: JSON.stringify(analysis.needs),
+    recommendations: JSON.stringify(analysis.recommendations),
   }).onConflictDoUpdate({
     target: reports.id,
     set: {
-      professionalAnalysis: generateProfessionalAnalysis(ana, first, second).analysis,
+      professionalAnalysis: analysis.analysis,
+      improved: JSON.stringify(analysis.improved),
+      worsened: JSON.stringify(analysis.worsened),
+      needs: JSON.stringify(analysis.needs),
+      recommendations: JSON.stringify(analysis.recommendations),
     },
   });
 

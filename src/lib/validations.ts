@@ -15,6 +15,7 @@ export const trainerSchema = z.object({
   brandSecondary: z.string().min(4),
   motivationalPhrase: z.string().min(4),
   reportSignature: z.string().min(4),
+  onboardingCompleted: z.coerce.boolean().optional().default(false),
 });
 
 export const studentSchema = z.object({
@@ -25,6 +26,14 @@ export const studentSchema = z.object({
   height: z.coerce.number().min(0.5).max(2.5),
   initialWeight: z.coerce.number().min(20).max(350),
   photoUrl: z.string().url().or(z.literal("")),
+  progressFrontUrl: z.string().url().or(z.literal("")),
+  progressSideUrl: z.string().url().or(z.literal("")),
+  progressBackUrl: z.string().url().or(z.literal("")),
+  goal: z.enum(["Emagrecimento", "Hipertrofia", "Recomposicao corporal", "Saude", "Performance"]),
+  trainingLevel: z.enum(["Iniciante", "Intermediario", "Avancado"]),
+  weeklyFrequency: z.coerce.number().min(0).max(14),
+  restrictions: z.string().optional().default(""),
+  clinicalNotes: z.string().optional().default(""),
   notes: z.string().optional().default(""),
 });
 
@@ -57,4 +66,17 @@ export const assessmentSchema = z.object({
     abdominal: positive,
     thigh: positive,
   }),
+});
+
+export const reportSaveSchema = z.object({
+  studentId: z.string().min(1),
+  firstAssessmentId: z.string().min(1),
+  secondAssessmentId: z.string().min(1),
+  template: z.enum(["premium", "compacto", "evolucao"]).default("premium"),
+  professionalAnalysis: z.string().min(10),
+  improved: z.array(z.string()).default([]),
+  worsened: z.array(z.string()).default([]),
+  needs: z.array(z.string()).default([]),
+  recommendations: z.array(z.string()).default([]),
+  publicEnabled: z.boolean().default(false),
 });

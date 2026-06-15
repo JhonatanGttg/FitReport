@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Activity, ArrowRight, CalendarDays, FileText, Scale, TrendingDown, TrendingUp } from "lucide-react";
+import { Activity, ArrowRight, CalendarDays, Dumbbell, FileText, ImageIcon, Scale, Target, TrendingDown, TrendingUp } from "lucide-react";
+import { Line, LineChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -22,6 +23,17 @@ export function StudentHistory({ student, assessments }: { student: Student; ass
   const first = ordered.find((item) => item.id === firstId) ?? ordered[0];
   const second = ordered.find((item) => item.id === secondId) ?? ordered[1] ?? ordered[0];
   const comparison = first && second ? compareAssessments(first, second) : null;
+  const progressPhotos = [
+    { label: "Frente", url: student.progressFrontUrl },
+    { label: "Lado", url: student.progressSideUrl },
+    { label: "Costas", url: student.progressBackUrl },
+  ].filter((item) => item.url);
+  const chart = ordered.map((assessment) => ({
+    data: formatDate(assessment.date),
+    peso: assessment.weight,
+    gordura: assessment.bodyFat,
+    massaMagra: assessment.leanMass,
+  }));
 
   return (
     <div className="grid gap-6">
@@ -44,6 +56,68 @@ export function StudentHistory({ student, assessments }: { student: Student; ass
         <SummaryCard title="Gordura" value={`${second?.bodyFat.toFixed(1) ?? "-"}%`} detail={comparison ? `${signed(comparison.bodyFat)} p.p.` : "sem comparativo"} icon={TrendingDown} />
         <SummaryCard title="Massa magra" value={`${second?.leanMass.toFixed(1) ?? "-"} kg`} detail={comparison ? `${signed(comparison.leanMass)} kg` : "sem comparativo"} icon={TrendingUp} />
       </section>
+
+      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card className="rounded-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="size-5 text-blue-500" />
+              Plano do aluno
+            </CardTitle>
+            <CardDescription>Contexto usado para analises e recomendacoes.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 text-sm">
+            <InfoRow label="Objetivo" value={student.goal} />
+            <InfoRow label="Nivel" value={student.trainingLevel} />
+            <InfoRow label="Frequencia" value={`${student.weeklyFrequency} treino(s) por semana`} />
+            <InfoRow label="Restricoes" value={student.restrictions || "Sem restricoes registradas"} />
+            <InfoRow label="Clinico" value={student.clinicalNotes || "Sem observacoes clinicas"} />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Dumbbell className="size-5 text-blue-500" />
+              Linha do tempo corporal
+            </CardTitle>
+            <CardDescription>Peso, gordura e massa magra por acompanhamento.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-72 overflow-x-auto">
+            {chart.length ? (
+              <LineChart width={760} height={250} data={chart}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="data" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="peso" stroke="#2563eb" strokeWidth={2} />
+                <Line type="monotone" dataKey="gordura" stroke="#ef4444" strokeWidth={2} />
+                <Line type="monotone" dataKey="massaMagra" stroke="#16a34a" strokeWidth={2} />
+              </LineChart>
+            ) : null}
+          </CardContent>
+        </Card>
+      </section>
+
+      {progressPhotos.length ? (
+        <Card className="rounded-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="size-5 text-blue-500" />
+              Fotos de progresso
+            </CardTitle>
+            <CardDescription>Registros visuais para comparar junto das medidas.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3">
+            {progressPhotos.map((photo) => (
+              <figure key={photo.label} className="overflow-hidden rounded-md border">
+                <img src={photo.url} alt={`Foto de progresso ${photo.label.toLowerCase()} de ${student.name}`} className="aspect-[4/5] w-full object-cover" />
+                <figcaption className="border-t px-3 py-2 text-sm font-semibold">{photo.label}</figcaption>
+              </figure>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="rounded-md">
         <CardHeader>
@@ -167,6 +241,15 @@ function SummaryCard({ title, value, detail, icon: Icon }: { title: string; valu
         </span>
       </CardContent>
     </Card>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1 rounded-md border bg-muted/30 p-3">
+      <span className="text-xs font-bold uppercase text-muted-foreground">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
   );
 }
 

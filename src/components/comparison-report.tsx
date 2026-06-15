@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Activity,
   ArrowDown,
@@ -20,22 +22,27 @@ import {
   TrendingUp,
   UserRound,
 } from "lucide-react";
+import { saveReportAction } from "@/app/dashboard/relatorios/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ReportExportActions, type ReportPdfData, type ReportPdfRow } from "@/components/report-export-actions";
 import { compareAssessments, generateProfessionalAnalysis, sumSkinfolds } from "@/lib/calculations";
 import { demoData } from "@/lib/demo-data";
 import { useTrainerProfile } from "@/lib/trainer-profile-store";
-import type { Assessment, Student, Trainer } from "@/lib/types";
+import type { Assessment, Report, ReportTemplate, Student, Trainer } from "@/lib/types";
 
 type ComparisonReportProps = {
   student?: Student;
   first?: Assessment;
   second?: Assessment;
   trainerProfile?: Trainer;
+  savedReport?: Report | null;
+  readOnly?: boolean;
 };
 
 export function ComparisonReport({
@@ -43,6 +50,8 @@ export function ComparisonReport({
   first = demoData.assessments.find((item) => item.studentId === demoData.students[0].id)!,
   second = demoData.assessments.filter((item) => item.studentId === demoData.students[0].id)[1],
   trainerProfile,
+  savedReport = null,
+  readOnly = false,
 }: ComparisonReportProps) {
   return (
     <ComparisonReportContent
@@ -51,6 +60,8 @@ export function ComparisonReport({
       first={first}
       second={second}
       trainerProfile={trainerProfile}
+      savedReport={savedReport}
+      readOnly={readOnly}
     />
   );
 }
@@ -60,23 +71,56 @@ function ComparisonReportContent({
   first,
   second,
   trainerProfile,
+  savedReport,
+  readOnly,
 }: {
   student: Student;
   first: Assessment;
   second: Assessment;
   trainerProfile?: Trainer;
+  savedReport?: Report | null;
+  readOnly: boolean;
 }) {
+  const router = useRouter();
+  const [isSaving, startSaving] = useTransition();
   const { trainer: localTrainer } = useTrainerProfile();
   const trainer = trainerProfile ?? localTrainer;
   const comparison = compareAssessments(first, second);
   const auto = generateProfessionalAnalysis(student, first, second);
   const autoRecommendationsText = auto.recommendations.join("\n");
-  const [professionalAnalysis, setProfessionalAnalysis] = useState(auto.analysis);
-  const [recommendationsText, setRecommendationsText] = useState(autoRecommendationsText);
+  const [professionalAnalysis, setProfessionalAnalysis] = useState(savedReport?.professionalAnalysis ?? auto.analysis);
+  const [recommendationsText, setRecommendationsText] = useState((savedReport?.recommendations.length ? savedReport.recommendations : auto.recommendations).join("\n"));
+  const [template, setTemplate] = useState<ReportTemplate>(savedReport?.template ?? "premium");
+  const [publicEnabled, setPublicEnabled] = useState(savedReport?.publicEnabled ?? false);
   const firstDate = formatDate(first.date);
   const secondDate = formatDate(second.date);
   const whatsappMessage = `FitReport Pro - Relatorio de ${student.name}: peso ${comparison.weight} kg, gordura ${comparison.bodyFat} p.p., massa magra ${comparison.leanMass} kg.`;
   const recommendations = parseRecommendations(recommendationsText);
+  const reportTitle = template === "compacto" ? "Relatorio compacto" : template === "evolucao" ? "Relatorio de evolucao" : "Relatorio comparativo";
+
+  function saveReport() {
+    startSaving(async () => {
+      try {
+        const saved = await saveReportAction({
+          studentId: student.id,
+          firstAssessmentId: first.id,
+          secondAssessmentId: second.id,
+          template,
+          professionalAnalysis,
+          improved: auto.improved,
+          worsened: auto.worsened,
+          needs: auto.needs,
+          recommendations,
+          publicEnabled,
+        });
+        toast.success(publicEnabled && saved.publicToken ? "Relatorio salvo com link publico por 30 dias." : "Relatorio salvo no historico.");
+        router.push(`/dashboard/relatorios/${saved.id}`);
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar o relatorio.");
+      }
+    });
+  }
 
   const metrics = [
     {
@@ -209,10 +253,10 @@ function ComparisonReportContent({
           <h1 className="text-3xl font-black tracking-tight">Relatorio comparativo</h1>
           <p className="text-muted-foreground">Modelo premium horizontal, mais visual e pronto para PDF, impressao e WhatsApp.</p>
         </div>
-        <ReportExportActions targetId="fitness-report" message={whatsappMessage} reportData={reportData} />
+        {readOnly ? null : <ReportExportActions targetId="fitness-report" message={whatsappMessage} reportData={reportData} />}
       </div>
 
-      <Card className="rounded-md border-blue-500/20 print:hidden">
+      {readOnly ? null : <Card className="rounded-md border-blue-500/20 print:hidden">
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -235,6 +279,27 @@ function ComparisonReportContent({
           </Button>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-2 lg:col-span-2">
+            <Label>Modelo do relatorio</Label>
+            <div className="grid gap-3 md:grid-cols-[240px_1fr_auto] md:items-center">
+              <Select value={template} onValueChange={(value) => setTemplate(value as ReportTemplate)}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="premium">Premium horizontal</SelectItem>
+                  <SelectItem value="compacto">Compacto executivo</SelectItem>
+                  <SelectItem value="evolucao">Evolucao mensal</SelectItem>
+                </SelectContent>
+              </Select>
+              <label className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
+                <Switch checked={publicEnabled} onCheckedChange={setPublicEnabled} />
+                Gerar link compartilhavel por 30 dias
+              </label>
+              <Button type="button" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" disabled={isSaving} onClick={saveReport}>
+                <ClipboardList className="size-4" />
+                {isSaving ? "Salvando..." : "Salvar relatorio"}
+              </Button>
+            </div>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="professional-analysis">Analise profissional</Label>
             <Textarea
@@ -254,7 +319,7 @@ function ComparisonReportContent({
             />
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       <section
         id="fitness-report"
@@ -277,7 +342,7 @@ function ComparisonReportContent({
               </div>
 
               <div className="flex flex-col justify-center">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white/60">Relatorio comparativo</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white/60">{reportTitle}</p>
                 <h2 className="mt-1 text-4xl font-black uppercase leading-none tracking-tight">
                   Avaliacao <span className="text-blue-500">fisica</span>
                 </h2>

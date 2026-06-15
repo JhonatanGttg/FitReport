@@ -1,4 +1,9 @@
 export type Sex = "Masculino" | "Feminino" | "Outro";
+export type StudentGoal = "Emagrecimento" | "Hipertrofia" | "Recomposicao corporal" | "Saude" | "Performance";
+export type TrainingLevel = "Iniciante" | "Intermediario" | "Avancado";
+export type SubscriptionPlan = "free" | "pro" | "studio";
+export type SubscriptionStatus = "trial" | "active" | "past_due" | "canceled";
+export type ReportTemplate = "premium" | "compacto" | "evolucao";
 
 export type Trainer = {
   id: string;
@@ -12,6 +17,11 @@ export type Trainer = {
   brandSecondary: string;
   motivationalPhrase: string;
   reportSignature: string;
+  onboardingCompleted: boolean;
+  plan: SubscriptionPlan;
+  subscriptionStatus: SubscriptionStatus;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
 };
 
 export type Student = {
@@ -24,6 +34,14 @@ export type Student = {
   height: number;
   initialWeight: number;
   photoUrl: string;
+  progressFrontUrl: string;
+  progressSideUrl: string;
+  progressBackUrl: string;
+  goal: StudentGoal;
+  trainingLevel: TrainingLevel;
+  weeklyFrequency: number;
+  restrictions: string;
+  clinicalNotes: string;
   notes: string;
 };
 
@@ -72,7 +90,15 @@ export type Report = {
   firstAssessmentId: string;
   secondAssessmentId: string;
   createdAt: string;
+  template: ReportTemplate;
   professionalAnalysis: string;
+  improved: string[];
+  worsened: string[];
+  needs: string[];
+  recommendations: string[];
+  publicToken: string;
+  publicEnabled: boolean;
+  publicExpiresAt: string | null;
 };
 
 export type AppData = {

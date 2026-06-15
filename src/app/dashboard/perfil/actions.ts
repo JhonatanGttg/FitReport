@@ -20,6 +20,7 @@ export async function updateTrainerAction(trainer: Trainer) {
     brandSecondary: trainer.brandSecondary,
     motivationalPhrase: trainer.motivationalPhrase,
     reportSignature: trainer.reportSignature,
+    onboardingCompleted: trainer.onboardingCompleted,
   }).where(eq(trainers.id, currentTrainer.id)).returning();
 
   revalidatePath("/dashboard");

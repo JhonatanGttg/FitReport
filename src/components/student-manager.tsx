@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { Edit, FileClock, Plus, Search, Trash2, UserRound } from "lucide-react";
+import { Edit, FileClock, ImagePlus, Plus, Search, Target, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -27,6 +27,14 @@ const emptyStudent: Student = {
   height: 1.7,
   initialWeight: 70,
   photoUrl: "",
+  progressFrontUrl: "",
+  progressSideUrl: "",
+  progressBackUrl: "",
+  goal: "Recomposicao corporal",
+  trainingLevel: "Intermediario",
+  weeklyFrequency: 3,
+  restrictions: "",
+  clinicalNotes: "",
   notes: "",
 };
 
@@ -52,6 +60,14 @@ export function StudentManager({ initialStudents = demoData.students }: { initia
       height: Number(formData.get("height")),
       initialWeight: Number(formData.get("initialWeight")),
       photoUrl: String(formData.get("photoUrl")),
+      progressFrontUrl: String(formData.get("progressFrontUrl")),
+      progressSideUrl: String(formData.get("progressSideUrl")),
+      progressBackUrl: String(formData.get("progressBackUrl")),
+      goal: String(formData.get("goal")) as Student["goal"],
+      trainingLevel: String(formData.get("trainingLevel")) as Student["trainingLevel"],
+      weeklyFrequency: Number(formData.get("weeklyFrequency")),
+      restrictions: String(formData.get("restrictions")),
+      clinicalNotes: String(formData.get("clinicalNotes")),
       notes: String(formData.get("notes")),
     };
 
@@ -119,6 +135,7 @@ export function StudentManager({ initialStudents = demoData.students }: { initia
                 <TableHead>Idade</TableHead>
                 <TableHead>Altura</TableHead>
                 <TableHead>Peso inicial</TableHead>
+                <TableHead>Objetivo</TableHead>
                 <TableHead className="text-right">Acoes</TableHead>
               </TableRow>
             </TableHeader>
@@ -140,6 +157,12 @@ export function StudentManager({ initialStudents = demoData.students }: { initia
                   <TableCell>{student.age}</TableCell>
                   <TableCell>{student.height} m</TableCell>
                   <TableCell>{student.initialWeight} kg</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold">
+                      <Target className="size-3 text-blue-500" />
+                      {student.goal}
+                    </span>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button asChild variant="ghost" size="icon" title="Historico">
                       <Link href={`/dashboard/alunos/${student.id}`}>
@@ -183,9 +206,53 @@ function StudentForm({ student, onSubmit }: { student: Student; onSubmit: (formD
       <Field label="Nascimento" name="birthDate" type="date" defaultValue={student.birthDate} />
       <Field label="Altura (m)" name="height" type="number" step="0.01" defaultValue={student.height} />
       <Field label="Peso inicial (kg)" name="initialWeight" type="number" step="0.1" defaultValue={student.initialWeight} />
+      <div className="grid gap-2">
+        <Label>Objetivo</Label>
+        <Select name="goal" defaultValue={student.goal}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Emagrecimento">Emagrecimento</SelectItem>
+            <SelectItem value="Hipertrofia">Hipertrofia</SelectItem>
+            <SelectItem value="Recomposicao corporal">Recomposicao corporal</SelectItem>
+            <SelectItem value="Saude">Saude</SelectItem>
+            <SelectItem value="Performance">Performance</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid gap-2">
+        <Label>Nivel de treino</Label>
+        <Select name="trainingLevel" defaultValue={student.trainingLevel}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Iniciante">Iniciante</SelectItem>
+            <SelectItem value="Intermediario">Intermediario</SelectItem>
+            <SelectItem value="Avancado">Avancado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Field label="Frequencia semanal" name="weeklyFrequency" type="number" min={0} max={14} defaultValue={student.weeklyFrequency} />
       <div className="grid gap-2 md:col-span-2">
         <Label>Foto URL</Label>
         <Input name="photoUrl" defaultValue={student.photoUrl} />
+      </div>
+      <div className="rounded-md border border-blue-500/20 p-3 md:col-span-2">
+        <p className="mb-3 flex items-center gap-2 text-sm font-bold">
+          <ImagePlus className="size-4 text-blue-500" />
+          Fotos de progresso
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <Field label="Frente URL" name="progressFrontUrl" defaultValue={student.progressFrontUrl} required={false} />
+          <Field label="Lado URL" name="progressSideUrl" defaultValue={student.progressSideUrl} required={false} />
+          <Field label="Costas URL" name="progressBackUrl" defaultValue={student.progressBackUrl} required={false} />
+        </div>
+      </div>
+      <div className="grid gap-2 md:col-span-2">
+        <Label>Restricoes</Label>
+        <Textarea name="restrictions" defaultValue={student.restrictions} />
+      </div>
+      <div className="grid gap-2 md:col-span-2">
+        <Label>Observacoes clinicas</Label>
+        <Textarea name="clinicalNotes" defaultValue={student.clinicalNotes} />
       </div>
       <div className="grid gap-2 md:col-span-2">
         <Label>Observacoes</Label>
@@ -197,11 +264,11 @@ function StudentForm({ student, onSubmit }: { student: Student; onSubmit: (formD
 }
 
 function Field(props: React.ComponentProps<"input"> & { label: string; name: string }) {
-  const { label, ...inputProps } = props;
+  const { label, required = true, ...inputProps } = props;
   return (
     <div className="grid gap-2">
       <Label>{label}</Label>
-      <Input {...inputProps} required />
+      <Input {...inputProps} required={required} />
     </div>
   );
 }

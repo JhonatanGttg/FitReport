@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Activity, BarChart3, Dumbbell, FileText, UserRoundCog, UsersRound } from "lucide-react";
+import { Activity, BarChart3, CreditCard, Dumbbell, FileText, ShieldCheck, UserRoundCog, UsersRound } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { demoData } from "@/lib/demo-data";
+import type { Trainer } from "@/lib/types";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -11,9 +12,11 @@ const nav = [
   { href: "/dashboard/avaliacoes/nova", label: "Nova avaliacao", icon: Activity },
   { href: "/dashboard/relatorios", label: "Relatorios", icon: FileText },
   { href: "/dashboard/perfil", label: "Perfil", icon: UserRoundCog },
+  { href: "/dashboard/assinatura", label: "Assinatura", icon: CreditCard },
+  { href: "/dashboard/admin", label: "Admin", icon: ShieldCheck },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, trainer = demoData.trainer }: { children: React.ReactNode; trainer?: Trainer }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r bg-sidebar/80 p-5 backdrop-blur xl:block">
@@ -23,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </span>
           <span>
             <span className="block text-lg font-black tracking-tight">FitReport Pro</span>
-            <span className="text-xs text-muted-foreground">{demoData.trainer.motivationalPhrase}</span>
+            <span className="text-xs text-muted-foreground">{trainer.motivationalPhrase}</span>
           </span>
         </Link>
         <nav className="mt-10 grid gap-2">
@@ -43,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Dumbbell className="size-5 text-blue-600" />
             FitReport Pro
           </Link>
-          <div className="hidden text-sm text-muted-foreground xl:block">Workspace de {demoData.trainer.name}</div>
+          <div className="hidden text-sm text-muted-foreground xl:block">Workspace de {trainer.name}</div>
           <div className="flex items-center gap-2">
             <Button asChild className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
               <Link href="/dashboard/avaliacoes/nova">

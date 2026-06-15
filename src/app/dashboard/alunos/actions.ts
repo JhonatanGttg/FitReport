@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { students } from "@/db/schema";
 import { getCurrentTrainer } from "@/lib/auth";
+import { studentSchema } from "@/lib/validations";
 import type { Sex, Student } from "@/lib/types";
 
 export async function saveStudentAction(formData: FormData): Promise<Student | null> {
@@ -12,8 +13,7 @@ export async function saveStudentAction(formData: FormData): Promise<Student | n
   const trainer = await getCurrentTrainer();
 
   const id = String(formData.get("id") ?? "");
-  const payload = {
-    trainerId: trainer.id,
+  const parsed = studentSchema.parse({
     name: String(formData.get("name") ?? ""),
     sex: String(formData.get("sex") ?? "Outro"),
     age: Number(formData.get("age") ?? 0),
@@ -21,7 +21,20 @@ export async function saveStudentAction(formData: FormData): Promise<Student | n
     height: Number(formData.get("height") ?? 0),
     initialWeight: Number(formData.get("initialWeight") ?? 0),
     photoUrl: String(formData.get("photoUrl") ?? ""),
+    progressFrontUrl: String(formData.get("progressFrontUrl") ?? ""),
+    progressSideUrl: String(formData.get("progressSideUrl") ?? ""),
+    progressBackUrl: String(formData.get("progressBackUrl") ?? ""),
+    goal: String(formData.get("goal") ?? "Recomposicao corporal"),
+    trainingLevel: String(formData.get("trainingLevel") ?? "Intermediario"),
+    weeklyFrequency: Number(formData.get("weeklyFrequency") ?? 3),
+    restrictions: String(formData.get("restrictions") ?? ""),
+    clinicalNotes: String(formData.get("clinicalNotes") ?? ""),
     notes: String(formData.get("notes") ?? ""),
+  });
+
+  const payload = {
+    trainerId: trainer.id,
+    ...parsed,
   };
 
   const rows = id
@@ -45,6 +58,14 @@ export async function saveStudentAction(formData: FormData): Promise<Student | n
     height: row.height,
     initialWeight: row.initialWeight,
     photoUrl: row.photoUrl,
+    progressFrontUrl: row.progressFrontUrl,
+    progressSideUrl: row.progressSideUrl,
+    progressBackUrl: row.progressBackUrl,
+    goal: row.goal as Student["goal"],
+    trainingLevel: row.trainingLevel as Student["trainingLevel"],
+    weeklyFrequency: row.weeklyFrequency,
+    restrictions: row.restrictions,
+    clinicalNotes: row.clinicalNotes,
     notes: row.notes,
   };
 }

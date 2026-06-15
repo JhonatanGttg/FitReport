@@ -113,9 +113,17 @@ export function generateProfessionalAnalysis(student: Student, first: Assessment
     needs.push("priorizar reducao abdominal com controle nutricional e cardio planejado");
   }
 
-  recommendations.push("Treino: manter progressao de carga em movimentos multiarticulares e incluir acessorios para pontos fracos.");
-  recommendations.push("Cardio: 2 a 4 sessoes semanais em zona moderada, ajustando volume conforme recuperacao.");
-  recommendations.push("Alimentacao: reforcar proteina diaria, fibras e consistencia no deficit ou manutencao conforme objetivo.");
+  if (student.goal === "Hipertrofia") {
+    recommendations.push("Treino: priorizar progressao de carga, volume por grupamento e tecnica consistente para ganho de massa magra.");
+  } else if (student.goal === "Emagrecimento") {
+    recommendations.push("Treino: manter musculacao como base e usar cardio planejado para aumentar gasto sem comprometer recuperacao.");
+  } else if (student.goal === "Performance") {
+    recommendations.push("Treino: combinar forca, potencia e condicionamento especifico, monitorando fadiga entre sessoes.");
+  } else {
+    recommendations.push("Treino: manter progressao de carga em movimentos multiarticulares e incluir acessorios para pontos fracos.");
+  }
+  recommendations.push(`Cardio: ajustar de 2 a 4 sessoes semanais conforme objetivo, rotina atual de ${student.weeklyFrequency} treinos e recuperacao.`);
+  recommendations.push("Alimentacao: reforcar proteina diaria, fibras e consistencia no deficit, manutencao ou superavit conforme objetivo.");
   recommendations.push("Descanso: sono de 7 a 9 horas e monitoramento de fadiga para preservar performance.");
 
   return {
@@ -123,6 +131,6 @@ export function generateProfessionalAnalysis(student: Student, first: Assessment
     worsened,
     needs,
     recommendations,
-    analysis: `${student.name} apresentou ${improved.length ? improved.join(", ") : "estabilidade nos principais indicadores"}. ${worsened.length ? `Pontos de alerta: ${worsened.join(", ")}. ` : ""}${needs.length ? `Ajustes recomendados: ${needs.join(", ")}. ` : ""}A leitura geral sugere manter acompanhamento quinzenal/mensal e correlacionar medidas com adesao, carga de treino, ingestao proteica e qualidade de sono.`,
+    analysis: `${student.name} apresentou ${improved.length ? improved.join(", ") : "estabilidade nos principais indicadores"}. O objetivo registrado e ${student.goal.toLowerCase()}, com nivel ${student.trainingLevel.toLowerCase()} e frequencia de ${student.weeklyFrequency} treino(s) por semana. ${student.restrictions ? `Restricoes/observacoes relevantes: ${student.restrictions}. ` : ""}${worsened.length ? `Pontos de alerta: ${worsened.join(", ")}. ` : ""}${needs.length ? `Ajustes recomendados: ${needs.join(", ")}. ` : ""}A leitura geral sugere manter acompanhamento quinzenal/mensal e correlacionar medidas com adesao, carga de treino, ingestao proteica e qualidade de sono.`,
   };
 }

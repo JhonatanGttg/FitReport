@@ -16,11 +16,11 @@ export default async function ReportPage({
     const comparison = await getComparisonData({ studentId: query.student, firstId: query.first, secondId: query.second });
     if (!comparison) notFound();
 
-    return <ComparisonReport trainerProfile={comparison.trainer} student={comparison.student} first={comparison.first} second={comparison.second} />;
+    return <ComparisonReport trainerProfile={comparison.trainer} student={comparison.student} first={comparison.first} second={comparison.second} savedReport={comparison.report} />;
   }
 
   const comparison = await getComparisonData({ reportId: id });
   if (!comparison) notFound();
 
-  return <ComparisonReport trainerProfile={comparison.trainer} student={comparison.student} first={comparison.first} second={comparison.second} />;
+  return <ComparisonReport trainerProfile={comparison.trainer} student={comparison.student} first={comparison.first} second={comparison.second} savedReport={comparison.report} />;
 }

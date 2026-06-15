@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FileText, History } from "lucide-react";
+import { CalendarClock, FileText, History, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAppData } from "@/lib/data";
@@ -58,13 +59,31 @@ export default async function ReportsPage() {
                   <FileText className="size-5 text-blue-500" />
                   {student.name}
                 </CardTitle>
-                <CardDescription>Criado em {new Date(`${report.createdAt}T00:00:00`).toLocaleDateString("pt-BR")}</CardDescription>
+                <CardDescription className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarClock className="size-3" />
+                    Criado em {new Date(report.createdAt).toLocaleDateString("pt-BR")}
+                  </span>
+                  <Badge variant="outline">{report.template}</Badge>
+                  {report.publicEnabled ? <Badge className="bg-emerald-600 text-white">link ativo</Badge> : null}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4 text-sm text-muted-foreground">{report.professionalAnalysis}</p>
+                {report.recommendations.length ? (
+                  <p className="mb-4 flex items-center gap-2 text-xs font-semibold text-blue-500">
+                    <Sparkles className="size-3" />
+                    {report.recommendations.length} recomendacoes personalizadas salvas
+                  </p>
+                ) : null}
                 <Button asChild className="w-full bg-blue-600 text-white hover:bg-blue-700">
                   <Link href={`/dashboard/relatorios/${report.id}`}>Abrir relatorio</Link>
                 </Button>
+                {report.publicEnabled && report.publicToken ? (
+                  <Button asChild variant="outline" className="mt-2 w-full">
+                    <Link href={`/r/${report.publicToken}`}>Abrir link publico</Link>
+                  </Button>
+                ) : null}
               </CardContent>
             </Card>
           );

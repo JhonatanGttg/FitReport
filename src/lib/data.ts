@@ -76,7 +76,7 @@ export async function getComparisonData({
     const first = data.assessments.find((item) => item.id === firstId && item.studentId === studentId);
     const second = data.assessments.find((item) => item.id === secondId && item.studentId === studentId);
     if (!student || !first || !second) return null;
-    return { trainer: data.trainer, student, first, second };
+    return { trainer: data.trainer, student, first, second, report: null };
   }
 
   const report = data.reports.find((item) => item.id === reportId);
@@ -87,7 +87,53 @@ export async function getComparisonData({
   const second = data.assessments.find((item) => item.id === report.secondAssessmentId);
   if (!student || !first || !second) return null;
 
-  return { trainer: data.trainer, student, first, second };
+  return { trainer: data.trainer, student, first, second, report };
+}
+
+export async function getPublicReportData(token: string) {
+  if (!canUseDatabase() || !token) return null;
+
+  try {
+    const db = getDb();
+    const [reportRow] = await db.select().from(reports).where(eq(reports.publicToken, token)).limit(1);
+    if (!reportRow || !reportRow.publicEnabled) return null;
+    if (reportRow.publicExpiresAt && reportRow.publicExpiresAt.getTime() < Date.now()) return null;
+
+    const [trainerRow] = await db.select().from(trainers).where(eq(trainers.id, reportRow.trainerId)).limit(1);
+    const [studentRow] = await db.select().from(students).where(eq(students.id, reportRow.studentId)).limit(1);
+    const assessmentRows = await db.select().from(assessments).where(inArray(assessments.id, [reportRow.firstAssessmentId, reportRow.secondAssessmentId]));
+    const assessmentIds = assessmentRows.map((item) => item.id);
+    const [measurementRows, skinfoldRows] = await Promise.all([
+      db.select().from(bodyMeasurements).where(inArray(bodyMeasurements.assessmentId, assessmentIds)),
+      db.select().from(skinfolds).where(inArray(skinfolds.assessmentId, assessmentIds)),
+    ]);
+
+    const firstRow = assessmentRows.find((item) => item.id === reportRow.firstAssessmentId);
+    const secondRow = assessmentRows.find((item) => item.id === reportRow.secondAssessmentId);
+    if (!trainerRow || !studentRow || !firstRow || !secondRow) return null;
+
+    const first = mapAssessment(
+      firstRow,
+      measurementRows.find((item) => item.assessmentId === firstRow.id),
+      skinfoldRows.find((item) => item.assessmentId === firstRow.id),
+    );
+    const second = mapAssessment(
+      secondRow,
+      measurementRows.find((item) => item.assessmentId === secondRow.id),
+      skinfoldRows.find((item) => item.assessmentId === secondRow.id),
+    );
+
+    return {
+      trainer: mapTrainer(trainerRow),
+      student: mapStudent(studentRow),
+      first,
+      second,
+      report: mapReport(reportRow),
+    };
+  } catch (error) {
+    console.error("Falha ao carregar relatorio publico.", error);
+    return null;
+  }
 }
 
 function mapTrainer(row: typeof trainers.$inferSelect): Trainer {
@@ -103,6 +149,11 @@ function mapTrainer(row: typeof trainers.$inferSelect): Trainer {
     brandSecondary: row.brandSecondary,
     motivationalPhrase: row.motivationalPhrase,
     reportSignature: row.reportSignature,
+    onboardingCompleted: row.onboardingCompleted,
+    plan: row.plan as Trainer["plan"],
+    subscriptionStatus: row.subscriptionStatus as Trainer["subscriptionStatus"],
+    stripeCustomerId: row.stripeCustomerId,
+    stripeSubscriptionId: row.stripeSubscriptionId,
   };
 }
 
@@ -117,6 +168,14 @@ function mapStudent(row: typeof students.$inferSelect): Student {
     height: row.height,
     initialWeight: row.initialWeight,
     photoUrl: row.photoUrl,
+    progressFrontUrl: row.progressFrontUrl,
+    progressSideUrl: row.progressSideUrl,
+    progressBackUrl: row.progressBackUrl,
+    goal: row.goal as Student["goal"],
+    trainingLevel: row.trainingLevel as Student["trainingLevel"],
+    weeklyFrequency: row.weeklyFrequency,
+    restrictions: row.restrictions,
+    clinicalNotes: row.clinicalNotes,
     notes: row.notes,
   };
 }
@@ -149,9 +208,27 @@ function mapReport(row: typeof reports.$inferSelect): Report {
     studentId: row.studentId,
     firstAssessmentId: row.firstAssessmentId,
     secondAssessmentId: row.secondAssessmentId,
+    template: row.template as Report["template"],
     professionalAnalysis: row.professionalAnalysis,
+    improved: parseList(row.improved),
+    worsened: parseList(row.worsened),
+    needs: parseList(row.needs),
+    recommendations: parseList(row.recommendations),
+    publicToken: row.publicToken,
+    publicEnabled: row.publicEnabled,
+    publicExpiresAt: row.publicExpiresAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+function parseList(value: string) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return value.split("\n").map((item) => item.trim()).filter(Boolean);
+  }
 }
 
 function mapMeasurements(row: typeof bodyMeasurements.$inferSelect): Measurements {

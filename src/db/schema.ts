@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { index, integer, numeric, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, numeric, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -20,6 +20,11 @@ export const trainers = pgTable("trainers", {
   brandSecondary: text("brand_secondary").default("#020617").notNull(),
   motivationalPhrase: text("motivational_phrase").default("").notNull(),
   reportSignature: text("report_signature").default("").notNull(),
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
+  plan: text("plan").default("free").notNull(),
+  subscriptionStatus: text("subscription_status").default("trial").notNull(),
+  stripeCustomerId: text("stripe_customer_id").default("").notNull(),
+  stripeSubscriptionId: text("stripe_subscription_id").default("").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("trainers_user_id_idx").on(table.userId)]);
 
@@ -33,6 +38,14 @@ export const students = pgTable("students", {
   height: numeric("height", { mode: "number" }).notNull(),
   initialWeight: numeric("initial_weight", { mode: "number" }).notNull(),
   photoUrl: text("photo_url").default("").notNull(),
+  progressFrontUrl: text("progress_front_url").default("").notNull(),
+  progressSideUrl: text("progress_side_url").default("").notNull(),
+  progressBackUrl: text("progress_back_url").default("").notNull(),
+  goal: text("goal").default("Recomposicao corporal").notNull(),
+  trainingLevel: text("training_level").default("Intermediario").notNull(),
+  weeklyFrequency: integer("weekly_frequency").default(3).notNull(),
+  restrictions: text("restrictions").default("").notNull(),
+  clinicalNotes: text("clinical_notes").default("").notNull(),
   notes: text("notes").default("").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("students_trainer_id_idx").on(table.trainerId)]);
@@ -87,9 +100,21 @@ export const reports = pgTable("reports", {
   studentId: uuid("student_id").references(() => students.id, { onDelete: "cascade" }).notNull(),
   firstAssessmentId: uuid("first_assessment_id").references(() => assessments.id, { onDelete: "cascade" }).notNull(),
   secondAssessmentId: uuid("second_assessment_id").references(() => assessments.id, { onDelete: "cascade" }).notNull(),
+  template: text("template").default("premium").notNull(),
   professionalAnalysis: text("professional_analysis").notNull(),
+  improved: text("improved").default("").notNull(),
+  worsened: text("worsened").default("").notNull(),
+  needs: text("needs").default("").notNull(),
+  recommendations: text("recommendations").default("").notNull(),
+  publicToken: text("public_token").default("").notNull(),
+  publicEnabled: boolean("public_enabled").default(false).notNull(),
+  publicExpiresAt: timestamp("public_expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("reports_trainer_id_idx").on(table.trainerId),
+  index("reports_student_id_idx").on(table.studentId),
+  index("reports_public_token_idx").on(table.publicToken),
+]);
 
 export const trainersRelations = relations(trainers, ({ many, one }) => ({
   user: one(users, { fields: [trainers.userId], references: [users.id] }),
