@@ -30,6 +30,8 @@ Crie `.env.local`:
 DATABASE_URL="postgresql://..."
 NEXT_PUBLIC_SUPABASE_URL="https://seu-projeto.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="sua-chave-anon"
+# ou, em projetos Supabase novos:
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sua-chave-publicavel"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # Stripe opcional
