@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { DatabaseSetupNotice } from "@/components/database-setup-notice";
 import { getCurrentTrainer, requireAuthenticatedUser } from "@/lib/auth";
 import type { Trainer } from "@/lib/types";
 
@@ -6,7 +7,14 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   await requireAuthenticatedUser();
-  const trainer = await getCurrentTrainer();
+  let trainer;
+  try {
+    trainer = await getCurrentTrainer();
+  } catch (error) {
+    console.error("Falha ao preparar workspace do personal.", error);
+    return <DatabaseSetupNotice detail={error instanceof Error ? error.message : "Nao foi possivel conectar ao banco."} />;
+  }
+
   const shellTrainer: Trainer = {
     id: trainer.id,
     userId: trainer.userId,
