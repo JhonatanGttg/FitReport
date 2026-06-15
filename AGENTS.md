@@ -1,5 +1,10 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# FitReport Pro
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+Este projeto roda com Vite + React + TypeScript.
+
+- Não use APIs do Next.js ou App Router.
+- A entrada principal é `src/main.tsx`.
+- A interface principal está em `src/App.tsx`.
+- O CSS global fica em `src/styles/globals.css`.
+- Dados reais devem passar pelo Supabase em `src/lib/supabase-data.ts`.
+- Variáveis públicas do frontend usam prefixo `VITE_`.
