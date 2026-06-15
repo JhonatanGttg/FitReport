@@ -66,16 +66,16 @@ export function ReportExportActions({
   }
 
   return (
-    <div className="no-print flex flex-wrap gap-2">
-      <Button onClick={pdf} className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
+    <div className="no-print grid gap-2 sm:flex sm:flex-wrap">
+      <Button type="button" onClick={pdf} className="h-11 gap-2 bg-blue-600 text-white hover:bg-blue-700">
         <FileDown className="size-4" />
         Gerar PDF
       </Button>
-      <Button variant="outline" onClick={() => window.print()} className="gap-2">
+      <Button type="button" variant="outline" onClick={() => window.print()} className="h-11 gap-2">
         <Printer className="size-4" />
         Imprimir
       </Button>
-      <Button variant="outline" onClick={whatsapp} className="gap-2">
+      <Button type="button" variant="outline" onClick={whatsapp} className="h-11 gap-2">
         <Share2 className="size-4" />
         WhatsApp
       </Button>

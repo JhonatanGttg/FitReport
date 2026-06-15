@@ -163,15 +163,15 @@ export default function App() {
 
       <div className="xl:pl-72">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/88 px-4 backdrop-blur md:px-8">
-          <button className="flex items-center gap-2 font-black xl:hidden" onClick={() => setView("dashboard")}>
+          <button className="flex min-w-0 items-center gap-2 font-black xl:hidden" onClick={() => setView("dashboard")}>
             <Dumbbell className="size-5 text-blue-600" />
-            FitReport Pro
+            <span className="truncate">FitReport Pro</span>
           </button>
           <div className="hidden text-sm text-muted-foreground xl:block">Workspace de {data.trainer.name}</div>
           <div className="flex items-center gap-2">
-            <Button type="button" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setView("assessment")}>
+            <Button type="button" className="gap-2 bg-blue-600 px-3 text-white hover:bg-blue-700 sm:px-4" onClick={() => setView("assessment")}>
               <Activity className="size-4" />
-              Nova avaliacao
+              <span className="hidden sm:inline">Nova avaliacao</span>
             </Button>
             <Button type="button" variant="outline" size="icon" onClick={logout} title="Sair">
               <LogOut className="size-4" />
@@ -179,7 +179,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="px-4 py-6 md:px-8">
+        <main className="px-3 pb-28 pt-4 sm:px-4 md:px-8 md:py-6 xl:pb-6">
           {view === "dashboard" ? <Dashboard data={data} onView={setView} /> : null}
           {view === "students" ? (
             currentStudent ? (
@@ -201,6 +201,7 @@ export default function App() {
           {view === "profile" ? <ProfilePage trainer={data.trainer} onRefresh={refreshData} /> : null}
         </main>
       </div>
+      <MobileNav current={view} onClick={setView} />
       <Toaster richColors position="top-right" />
     </div>
   );
@@ -319,18 +320,18 @@ function Dashboard({ data, onView }: { data: AppData; onView: (view: View) => vo
 
   return (
     <div className="grid gap-6">
-      <section className="flex flex-col justify-between gap-4 rounded-md border bg-card p-5 md:flex-row md:items-center">
+      <section className="flex flex-col justify-between gap-4 rounded-md border bg-card p-4 sm:p-5 md:flex-row md:items-center">
         <div>
           <Badge className="mb-3 bg-blue-600 text-white">SaaS fitness premium</Badge>
-          <h1 className="text-3xl font-black tracking-tight md:text-4xl">Dashboard do personal</h1>
+          <h1 className="text-2xl font-black tracking-tight sm:text-3xl md:text-4xl">Dashboard do personal</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">Acompanhe evolucao real dos alunos e gere relatórios profissionais.</p>
         </div>
-        <Button type="button" size="lg" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => onView("assessment")}>
+        <Button type="button" size="lg" className="h-11 w-full gap-2 bg-blue-600 text-white hover:bg-blue-700 sm:w-auto" onClick={() => onView("assessment")}>
           <Activity className="size-4" />
           Nova avaliacao
         </Button>
       </section>
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric title="Total de alunos" value={String(data.students.length)} detail="ativos no banco" icon={UsersRound} />
         <Metric title="Avaliacoes realizadas" value={String(data.assessments.length)} detail="sincronizadas" icon={Activity} />
         <Metric title="Evolucao media" value={`${avgFat > 0 ? "+" : ""}${avgFat.toFixed(1)} p.p.`} detail="gordura corporal" icon={BarChart3} />
@@ -343,26 +344,43 @@ function Dashboard({ data, onView }: { data: AppData; onView: (view: View) => vo
         </CardHeader>
         <CardContent>
           {latest.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Peso</TableHead>
-                  <TableHead className="text-right">% gordura</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="grid gap-3 md:hidden">
                 {latest.map((assessment) => (
-                  <TableRow key={assessment.id}>
-                    <TableCell>{data.students.find((student) => student.id === assessment.studentId)?.name}</TableCell>
-                    <TableCell>{formatDate(assessment.date)}</TableCell>
-                    <TableCell>{assessment.weight.toFixed(1)} kg</TableCell>
-                    <TableCell className="text-right">{assessment.bodyFat.toFixed(1)}%</TableCell>
-                  </TableRow>
+                  <AssessmentSummaryCard
+                    key={assessment.id}
+                    title={data.students.find((student) => student.id === assessment.studentId)?.name ?? "Aluno"}
+                    rows={[
+                      ["Data", formatDate(assessment.date)],
+                      ["Peso", `${assessment.weight.toFixed(1)} kg`],
+                      ["Gordura", `${assessment.bodyFat.toFixed(1)}%`],
+                    ]}
+                  />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Aluno</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Peso</TableHead>
+                      <TableHead className="text-right">% gordura</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {latest.map((assessment) => (
+                      <TableRow key={assessment.id}>
+                        <TableCell>{data.students.find((student) => student.id === assessment.studentId)?.name}</TableCell>
+                        <TableCell>{formatDate(assessment.date)}</TableCell>
+                        <TableCell>{assessment.weight.toFixed(1)} kg</TableCell>
+                        <TableCell className="text-right">{assessment.bodyFat.toFixed(1)}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           ) : (
             <EmptyState title="Nenhuma avaliacao ainda" description="Cadastre alunos e registre a primeira avaliacao fisica." />
           )}
@@ -381,10 +399,10 @@ function StudentsPage({ data, onRefresh, onOpenStudent }: { data: AppData; onRef
     <div className="grid gap-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">Alunos</h1>
+          <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Alunos</h1>
           <p className="text-muted-foreground">Base real sincronizada com Supabase.</p>
         </div>
-        <Button type="button" className="gap-2 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setEditing(createEmptyStudent(data.trainer.id))}>
+        <Button type="button" className="h-11 w-full gap-2 bg-blue-600 text-white hover:bg-blue-700 sm:w-auto" onClick={() => setEditing(createEmptyStudent(data.trainer.id))}>
           <Plus className="size-4" />
           Novo aluno
         </Button>
@@ -396,42 +414,72 @@ function StudentsPage({ data, onRefresh, onOpenStudent }: { data: AppData; onRef
           <CardDescription>Dados fisicos, objetivo e atalhos de acompanhamento.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="relative max-w-md">
+          <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Buscar aluno" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <Input className="h-11 pl-9" placeholder="Buscar aluno" value={query} onChange={(event) => setQuery(event.target.value)} />
           </div>
           {filtered.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>Objetivo</TableHead>
-                  <TableHead>Altura</TableHead>
-                  <TableHead>Peso inicial</TableHead>
-                  <TableHead className="text-right">Acoes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="grid gap-3 md:hidden">
                 {filtered.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell>
-                      <p className="font-semibold">{student.name}</p>
-                      <p className="text-xs text-muted-foreground">{student.sex}, {student.age} anos</p>
-                    </TableCell>
-                    <TableCell>{student.goal}</TableCell>
-                    <TableCell>{student.height} m</TableCell>
-                    <TableCell>{student.initialWeight} kg</TableCell>
-                    <TableCell className="text-right">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => onOpenStudent(student.id)}>Historico</Button>
-                      <Button type="button" variant="ghost" size="icon" onClick={() => setEditing(student)}><Edit className="size-4" /></Button>
-                      <Button type="button" variant="ghost" size="icon" onClick={async () => { await deleteStudent(student.id); await onRefresh(); toast.success("Aluno removido."); }}>
+                  <div key={student.id} className="rounded-md border bg-background p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-bold">{student.name}</p>
+                        <p className="text-sm text-muted-foreground">{student.sex}, {student.age} anos</p>
+                      </div>
+                      <Badge className="shrink-0 bg-blue-600/15 text-blue-300">{student.weeklyFrequency}x/sem</Badge>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                      <InfoPill label="Objetivo" value={student.goal} />
+                      <InfoPill label="Altura" value={`${student.height} m`} />
+                      <InfoPill label="Peso inicial" value={`${student.initialWeight} kg`} />
+                      <InfoPill label="Nivel" value={student.trainingLevel} />
+                    </div>
+                    <div className="mt-4 grid grid-cols-[1fr_auto_auto] gap-2">
+                      <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => onOpenStudent(student.id)}>Historico</Button>
+                      <Button type="button" variant="outline" size="icon" onClick={() => setEditing(student)}><Edit className="size-4" /></Button>
+                      <Button type="button" variant="outline" size="icon" onClick={async () => { await deleteStudent(student.id); await onRefresh(); toast.success("Aluno removido."); }}>
                         <Trash2 className="size-4 text-red-500" />
                       </Button>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Aluno</TableHead>
+                      <TableHead>Objetivo</TableHead>
+                      <TableHead>Altura</TableHead>
+                      <TableHead>Peso inicial</TableHead>
+                      <TableHead className="text-right">Acoes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell>
+                          <p className="font-semibold">{student.name}</p>
+                          <p className="text-xs text-muted-foreground">{student.sex}, {student.age} anos</p>
+                        </TableCell>
+                        <TableCell>{student.goal}</TableCell>
+                        <TableCell>{student.height} m</TableCell>
+                        <TableCell>{student.initialWeight} kg</TableCell>
+                        <TableCell className="text-right">
+                          <Button type="button" variant="ghost" size="sm" onClick={() => onOpenStudent(student.id)}>Historico</Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => setEditing(student)}><Edit className="size-4" /></Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={async () => { await deleteStudent(student.id); await onRefresh(); toast.success("Aluno removido."); }}>
+                            <Trash2 className="size-4 text-red-500" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           ) : (
             <EmptyState title="Nenhum aluno cadastrado" description="Crie o primeiro aluno para iniciar os acompanhamentos." />
           )}
@@ -461,12 +509,12 @@ function StudentEditor({ student, onClose, onSaved }: { student: Student; onClos
 
   return (
     <Card className="rounded-md border-blue-500/20">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>{form.id ? "Editar aluno" : "Novo aluno"}</CardTitle>
           <CardDescription>Preencha dados reais do aluno.</CardDescription>
         </div>
-        <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
+        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onClose}>Fechar</Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
@@ -551,7 +599,7 @@ function AssessmentPage({ data, onSaved, onReport }: { data: AppData; onSaved: (
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Nova avaliacao fisica</h1>
+        <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Nova avaliacao fisica</h1>
         <p className="text-muted-foreground">Formulario sincronizado diretamente com Supabase.</p>
       </div>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
@@ -561,7 +609,7 @@ function AssessmentPage({ data, onSaved, onReport }: { data: AppData; onSaved: (
             <CardDescription>Preencha com medidas reais coletadas na avaliação.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
               <SelectField label="Aluno" value={studentId} placeholder="Selecione" options={data.students.map((student) => student.id)} optionLabel={(id) => data.students.find((student) => student.id === id)?.name ?? id} onChange={chooseStudent} className="md:col-span-2" />
               <ControlledField label="Peso (kg)" type="number" step="0.1" value={weight} onChange={setWeight} required />
               <ControlledField label="Altura (m)" type="number" step="0.01" value={height} onChange={setHeight} required />
@@ -599,13 +647,13 @@ function StudentHistory({ student, assessments, onBack, onReport }: { student: S
   return (
     <div className="grid gap-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">{student.name}</h1>
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-black tracking-tight sm:text-3xl">{student.name}</h1>
           <p className="text-muted-foreground">{student.goal} | {student.weeklyFrequency} treino(s)/semana</p>
         </div>
-        <Button type="button" variant="outline" onClick={onBack}>Voltar</Button>
+        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onBack}>Voltar</Button>
       </div>
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric title="Avaliacoes" value={String(ordered.length)} detail="registros" icon={Activity} />
         <Metric title="Peso atual" value={`${second?.weight.toFixed(1) ?? "-"} kg`} detail={`inicial ${student.initialWeight} kg`} icon={UserRound} />
         <Metric title="Gordura" value={`${second?.bodyFat.toFixed(1) ?? "-"}%`} detail={comparison ? `${signed(comparison.bodyFat)} p.p.` : "sem comparativo"} icon={BarChart3} />
@@ -618,30 +666,48 @@ function StudentHistory({ student, assessments, onBack, onReport }: { student: S
         </CardHeader>
         <CardContent>
           {ordered.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Peso</TableHead>
-                  <TableHead>IMC</TableHead>
-                  <TableHead>% gordura</TableHead>
-                  <TableHead>Massa magra</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="grid gap-3 md:hidden">
                 {ordered.map((assessment) => (
-                  <TableRow key={assessment.id}>
-                    <TableCell>{formatDate(assessment.date)}</TableCell>
-                    <TableCell>{assessment.weight.toFixed(1)} kg</TableCell>
-                    <TableCell>{assessment.bmi.toFixed(1)}</TableCell>
-                    <TableCell>{assessment.bodyFat.toFixed(1)}%</TableCell>
-                    <TableCell>{assessment.leanMass.toFixed(1)} kg</TableCell>
-                  </TableRow>
+                  <AssessmentSummaryCard
+                    key={assessment.id}
+                    title={formatDate(assessment.date)}
+                    rows={[
+                      ["Peso", `${assessment.weight.toFixed(1)} kg`],
+                      ["IMC", assessment.bmi.toFixed(1)],
+                      ["Gordura", `${assessment.bodyFat.toFixed(1)}%`],
+                      ["Massa magra", `${assessment.leanMass.toFixed(1)} kg`],
+                    ]}
+                  />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Peso</TableHead>
+                      <TableHead>IMC</TableHead>
+                      <TableHead>% gordura</TableHead>
+                      <TableHead>Massa magra</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ordered.map((assessment) => (
+                      <TableRow key={assessment.id}>
+                        <TableCell>{formatDate(assessment.date)}</TableCell>
+                        <TableCell>{assessment.weight.toFixed(1)} kg</TableCell>
+                        <TableCell>{assessment.bmi.toFixed(1)}</TableCell>
+                        <TableCell>{assessment.bodyFat.toFixed(1)}%</TableCell>
+                        <TableCell>{assessment.leanMass.toFixed(1)} kg</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           ) : <EmptyState title="Sem avaliações" description="Registre a primeira avaliação deste aluno." />}
-          {first && second ? <Button type="button" className="mt-4 bg-blue-600 text-white hover:bg-blue-700" onClick={() => onReport({ student, first, second })}>Comparar ultimos</Button> : null}
+          {first && second ? <Button type="button" className="mt-4 h-11 w-full bg-blue-600 text-white hover:bg-blue-700 sm:w-auto" onClick={() => onReport({ student, first, second })}>Comparar ultimos</Button> : null}
         </CardContent>
       </Card>
     </div>
@@ -656,10 +722,10 @@ function ReportsPage({ data, selected, onSelect, onRefresh }: { data: AppData; s
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Relatorios</h1>
+        <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Relatorios</h1>
         <p className="text-muted-foreground">Gere comparativos a partir das avaliações reais.</p>
       </div>
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {data.students.map((student) => {
           const ordered = data.assessments.filter((item) => item.studentId === student.id).sort((a, b) => a.date.localeCompare(b.date));
           const first = ordered.at(-2);
@@ -672,7 +738,7 @@ function ReportsPage({ data, selected, onSelect, onRefresh }: { data: AppData; s
               </CardHeader>
               <CardContent>
                 {first && second ? (
-                  <Button type="button" className="w-full bg-blue-600 text-white hover:bg-blue-700" onClick={() => onSelect({ student, first, second })}>Comparar ultimos</Button>
+                  <Button type="button" className="h-11 w-full bg-blue-600 text-white hover:bg-blue-700" onClick={() => onSelect({ student, first, second })}>Comparar ultimos</Button>
                 ) : <p className="text-sm text-muted-foreground">Precisa de pelo menos 2 avaliações.</p>}
               </CardContent>
             </Card>
@@ -691,7 +757,7 @@ function ReportsPage({ data, selected, onSelect, onRefresh }: { data: AppData; s
               </CardHeader>
               <CardContent>
                 <p className="mb-4 line-clamp-3 text-sm text-muted-foreground">{report.professionalAnalysis}</p>
-                <Button type="button" className="w-full" variant="outline" onClick={() => onSelect({ student, first, second, report })}>Abrir salvo</Button>
+                <Button type="button" className="h-11 w-full" variant="outline" onClick={() => onSelect({ student, first, second, report })}>Abrir salvo</Button>
               </CardContent>
             </Card>
           );
@@ -765,12 +831,12 @@ function ReportView({ data, payload, onBack, onRefresh }: { data: AppData; paylo
     <div className="grid gap-4">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">Relatorio comparativo</h1>
+          <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Relatorio comparativo</h1>
           <p className="text-muted-foreground">{payload.student.name} | {formatDate(payload.first.date)} x {formatDate(payload.second.date)}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={onBack}>Voltar</Button>
-          <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={persist}>Salvar relatorio</Button>
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
+          <Button type="button" variant="outline" className="h-11" onClick={onBack}>Voltar</Button>
+          <Button type="button" className="h-11 bg-blue-600 text-white hover:bg-blue-700" onClick={persist}>Salvar relatorio</Button>
           <ReportExportActions targetId="fitness-report" message={`Relatorio de ${payload.student.name}`} reportData={pdfData} />
         </div>
       </div>
@@ -790,12 +856,13 @@ function ReportView({ data, payload, onBack, onRefresh }: { data: AppData; paylo
           </div>
         </CardContent>
       </Card>
-      <section id="fitness-report" className="overflow-hidden rounded-md border bg-white text-slate-950 shadow-2xl">
-        <div className="bg-[#030712] p-6 text-white">
-          <h2 className="text-3xl font-black uppercase">Relatorio comparativo <span className="text-blue-500">avaliacao fisica</span></h2>
+      <section id="fitness-report" className="overflow-x-auto rounded-md border bg-white text-slate-950 shadow-2xl">
+        <div className="min-w-[760px] md:min-w-0">
+        <div className="bg-[#030712] p-5 text-white sm:p-6">
+          <h2 className="text-2xl font-black uppercase sm:text-3xl">Relatorio comparativo <span className="text-blue-500">avaliacao fisica</span></h2>
           <p className="mt-2 text-sm text-white/70">{data.trainer.name} | {payload.student.name}</p>
         </div>
-        <div className="grid gap-4 p-6">
+        <div className="grid gap-4 p-4 sm:p-6">
           <div className="grid gap-3 md:grid-cols-4">
             {metrics.map((metric) => <MetricCardReport key={metric.title} {...metric} />)}
           </div>
@@ -815,6 +882,7 @@ function ReportView({ data, payload, onBack, onRefresh }: { data: AppData; paylo
               <Insight title="Recomendacoes" items={recs} tone="brand" />
             </div>
           </div>
+        </div>
         </div>
       </section>
     </div>
@@ -839,7 +907,7 @@ function ProfilePage({ trainer, onRefresh }: { trainer: Trainer; onRefresh: () =
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Perfil do personal</h1>
+        <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Perfil do personal</h1>
         <p className="text-muted-foreground">Identidade usada nos relatorios.</p>
       </div>
       <Card className="rounded-md">
@@ -868,6 +936,38 @@ function NavButton({ view, current, icon: Icon, label, onClick }: { view: View; 
   );
 }
 
+function MobileNav({ current, onClick }: { current: View; onClick: (view: View) => void }) {
+  const items: Array<{ view: View; label: string; icon: typeof BarChart3 }> = [
+    { view: "dashboard", label: "Inicio", icon: BarChart3 },
+    { view: "students", label: "Alunos", icon: UsersRound },
+    { view: "assessment", label: "Avaliar", icon: Activity },
+    { view: "reports", label: "Relatorios", icon: FileText },
+    { view: "profile", label: "Perfil", icon: UserRoundCog },
+  ];
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 backdrop-blur xl:hidden">
+      <div className="mx-auto grid max-w-xl grid-cols-5 gap-1">
+        {items.map(({ view, label, icon: Icon }) => {
+          const active = current === view;
+          return (
+            <button
+              key={view}
+              type="button"
+              onClick={() => onClick(view)}
+              className={active ? "grid min-h-14 place-items-center rounded-md bg-blue-600 text-white" : "grid min-h-14 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon className="size-5" />
+              <span className="mt-1 text-[0.68rem] font-semibold leading-none">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 function Field(props: React.ComponentProps<"input"> & { label: string; name: string }) {
   const { label, ...inputProps } = props;
   return <div className="grid gap-2"><Label>{label}</Label><Input {...inputProps} className="h-11" /></div>;
@@ -881,14 +981,14 @@ type ControlledFieldProps = Omit<React.ComponentProps<"input">, "onChange" | "va
 };
 
 function ControlledField({ label, value, onChange, className, ...props }: ControlledFieldProps) {
-  return <div className={`grid gap-2 ${className ?? ""}`}><Label>{label}</Label><Input {...props} value={value} onChange={(event) => onChange(event.target.value)} /></div>;
+  return <div className={`grid gap-2 ${className ?? ""}`}><Label className="leading-tight">{label}</Label><Input {...props} className="h-11" value={value} onChange={(event) => onChange(event.target.value)} /></div>;
 }
 
 function SelectField({ label, value, options, onChange, optionLabel, placeholder, className }: { label: string; value: string; options: string[]; onChange: (value: string) => void; optionLabel?: (value: string) => string; placeholder?: string; className?: string }) {
   return (
     <div className={`grid gap-2 ${className ?? ""}`}>
       <Label>{label}</Label>
-      <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
+      <select className="h-11 rounded-md border border-input bg-background px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
         {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => <option key={option} value={option}>{optionLabel ? optionLabel(option) : option}</option>)}
       </select>
@@ -900,7 +1000,7 @@ function MeasurementGrid<T extends Measurements | Skinfolds>({ title, labels, va
   return (
     <div>
       <h2 className="mb-3 font-bold">{title}</h2>
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-5">
         {(Object.keys(labels) as Array<keyof T>).map((key) => (
           <ControlledField
             key={String(key)}
@@ -917,7 +1017,7 @@ function MeasurementGrid<T extends Measurements | Skinfolds>({ title, labels, va
 }
 
 function Metric({ title, value, detail, icon: Icon }: { title: string; value: string; detail: string; icon: typeof UsersRound }) {
-  return <Card className="rounded-md"><CardContent className="flex items-center justify-between p-5"><div><p className="text-sm text-muted-foreground">{title}</p><p className="mt-2 text-2xl font-black">{value}</p><p className="text-xs text-muted-foreground">{detail}</p></div><span className="grid size-11 place-items-center rounded-md bg-blue-600/10 text-blue-500"><Icon className="size-5" /></span></CardContent></Card>;
+  return <Card className="rounded-md"><CardContent className="flex items-center justify-between gap-3 p-4 sm:p-5"><div className="min-w-0"><p className="text-sm text-muted-foreground">{title}</p><p className="mt-2 truncate text-xl font-black sm:text-2xl">{value}</p><p className="text-xs text-muted-foreground">{detail}</p></div><span className="grid size-10 shrink-0 place-items-center rounded-md bg-blue-600/10 text-blue-500 sm:size-11"><Icon className="size-5" /></span></CardContent></Card>;
 }
 
 function AutoMetric({ label, value }: { label: string; value: string }) {
@@ -929,7 +1029,22 @@ function AuthModeButton({ active, onClick, children }: { active: boolean; onClic
 }
 
 function EmptyState({ title, description }: { title: string; description: string }) {
-  return <div className="grid place-items-center rounded-md border border-dashed p-8 text-center"><p className="font-bold">{title}</p><p className="mt-1 text-sm text-muted-foreground">{description}</p></div>;
+  return <div className="grid place-items-center rounded-md border border-dashed p-6 text-center sm:p-8"><p className="font-bold">{title}</p><p className="mt-1 text-sm text-muted-foreground">{description}</p></div>;
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return <div className="min-w-0 rounded-md bg-muted/50 p-2"><p className="text-[0.68rem] uppercase text-muted-foreground">{label}</p><p className="truncate text-sm font-semibold">{value}</p></div>;
+}
+
+function AssessmentSummaryCard({ title, rows }: { title: string; rows: Array<[string, string]> }) {
+  return (
+    <div className="rounded-md border bg-background p-4">
+      <p className="font-bold">{title}</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {rows.map(([label, value]) => <InfoPill key={label} label={label} value={value} />)}
+      </div>
+    </div>
+  );
 }
 
 function FullLoader({ label }: { label: string }) {
