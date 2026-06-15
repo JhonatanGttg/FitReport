@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { compareAssessments, sumSkinfolds } from "@/lib/calculations";
-import { demoData } from "@/lib/demo-data";
 import type { Assessment, Student } from "@/lib/types";
 
 export function StudentHistory({ student, assessments }: { student: Student; assessments: Assessment[] }) {
@@ -186,12 +185,6 @@ export function StudentHistory({ student, assessments }: { student: Student; ass
       </Card>
     </div>
   );
-}
-
-export function StudentHistoryById({ studentId }: { studentId: string }) {
-  const student = demoData.students.find((item) => item.id === studentId) ?? demoData.students[0];
-  const assessments = demoData.assessments.filter((item) => item.studentId === student.id);
-  return <StudentHistory student={student} assessments={assessments} />;
 }
 
 function AssessmentSelect({

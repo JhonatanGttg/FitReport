@@ -2,7 +2,6 @@ import { asc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { assessments, bodyMeasurements, reports, skinfolds, students, trainers } from "@/db/schema";
 import { getOptionalCurrentTrainer } from "@/lib/auth";
-import { demoData } from "@/lib/demo-data";
 import type { AppData, Assessment, Measurements, Report, Skinfolds, Student, Trainer } from "@/lib/types";
 
 function canUseDatabase() {
@@ -10,12 +9,12 @@ function canUseDatabase() {
 }
 
 export async function getAppData(): Promise<AppData> {
-  if (!canUseDatabase()) return demoData;
+  if (!canUseDatabase()) throw new Error("DATABASE_URL nao configurada. Configure as variaveis de ambiente do Vercel.");
 
   try {
     const db = getDb();
     const trainer = await getOptionalCurrentTrainer();
-    if (!trainer) return demoData;
+    if (!trainer) throw new Error("Personal autenticado nao encontrado.");
 
     const [studentRows, assessmentRows, reportRows] = await Promise.all([
       db.select().from(students).where(eq(students.trainerId, trainer.id)).orderBy(asc(students.name)),
@@ -42,8 +41,8 @@ export async function getAppData(): Promise<AppData> {
       reports: reportRows.map(mapReport),
     };
   } catch (error) {
-    console.error("Falha ao carregar dados reais. Usando demo.", error);
-    return demoData;
+    console.error("Falha ao carregar dados reais.", error);
+    throw error;
   }
 }
 

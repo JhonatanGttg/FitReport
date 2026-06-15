@@ -180,7 +180,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" | "reset" }) {
                       name="email"
                       type="email"
                       placeholder="voce@email.com"
-                      defaultValue={mode === "signup" ? "" : "personal@fitreport.pro"}
                       required
                       className="h-11 bg-white/5 pl-10 text-white"
                     />
@@ -193,7 +192,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" | "reset" }) {
                         name="password"
                         type="password"
                         placeholder="Minimo de 6 caracteres"
-                        defaultValue={mode === "signup" ? "" : "fitreport"}
                         minLength={6}
                         required
                         className="h-11 bg-white/5 pl-10 text-white"

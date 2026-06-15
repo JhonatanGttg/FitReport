@@ -3,7 +3,6 @@ import { Activity, BarChart3, CreditCard, Dumbbell, FileText, ShieldCheck, UserR
 import { LogoutButton } from "@/components/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { demoData } from "@/lib/demo-data";
 import type { Trainer } from "@/lib/types";
 
 const nav = [
@@ -16,7 +15,7 @@ const nav = [
   { href: "/dashboard/admin", label: "Admin", icon: ShieldCheck },
 ];
 
-export function AppShell({ children, trainer = demoData.trainer }: { children: React.ReactNode; trainer?: Trainer }) {
+export function AppShell({ children, trainer }: { children: React.ReactNode; trainer: Trainer }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r bg-sidebar/80 p-5 backdrop-blur xl:block">

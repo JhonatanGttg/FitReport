@@ -1,33 +1,50 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { demoData } from "@/lib/demo-data";
 import type { Trainer } from "@/lib/types";
 
 const key = "fitreport-pro:trainer-profile";
 const eventName = "fitreport-pro:trainer-profile-updated";
 let cachedRaw: string | null = null;
-let cachedProfile: Trainer = demoData.trainer;
+const emptyTrainer: Trainer = {
+  id: "",
+  userId: "",
+  name: "",
+  logoUrl: "",
+  photoUrl: "",
+  instagram: "",
+  whatsapp: "",
+  brandPrimary: "#2563eb",
+  brandSecondary: "#020617",
+  motivationalPhrase: "",
+  reportSignature: "",
+  onboardingCompleted: false,
+  plan: "free",
+  subscriptionStatus: "trial",
+  stripeCustomerId: "",
+  stripeSubscriptionId: "",
+};
+let cachedProfile: Trainer = emptyTrainer;
 
 function readProfile(): Trainer {
-  if (typeof window === "undefined") return demoData.trainer;
+  if (typeof window === "undefined") return emptyTrainer;
 
   try {
     const stored = window.localStorage.getItem(key);
     if (!stored) {
       cachedRaw = null;
-      cachedProfile = demoData.trainer;
+      cachedProfile = emptyTrainer;
       return cachedProfile;
     }
 
     if (stored !== cachedRaw) {
       cachedRaw = stored;
-      cachedProfile = { ...demoData.trainer, ...JSON.parse(stored) };
+      cachedProfile = { ...emptyTrainer, ...JSON.parse(stored) };
     }
 
     return cachedProfile;
   } catch {
-    return demoData.trainer;
+    return emptyTrainer;
   }
 }
 
@@ -41,7 +58,7 @@ function subscribe(callback: () => void) {
 }
 
 export function useTrainerProfile() {
-  const trainer = useSyncExternalStore(subscribe, readProfile, () => demoData.trainer);
+  const trainer = useSyncExternalStore(subscribe, readProfile, () => emptyTrainer);
 
   function saveTrainer(next: Trainer) {
     window.localStorage.setItem(key, JSON.stringify(next));

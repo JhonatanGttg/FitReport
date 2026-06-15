@@ -39,7 +39,7 @@ NEXT_PUBLIC_STRIPE_PRO_PRICE_ID="price_..."
 NEXT_PUBLIC_STRIPE_STUDIO_PRICE_ID="price_..."
 ```
 
-Sem banco configurado, o app mantém dados demo.
+Sem banco configurado, o app não carrega dados fictícios. Configure as variáveis no Vercel para usar a aplicação.
 
 ## Banco
 

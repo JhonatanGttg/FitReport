@@ -14,18 +14,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteStudentAction, saveStudentAction } from "@/app/dashboard/alunos/actions";
-import { demoData } from "@/lib/demo-data";
-import type { Sex, Student } from "@/lib/types";
+import type { Student } from "@/lib/types";
 
 const emptyStudent: Student = {
   id: "",
-  trainerId: "trainer-demo",
+  trainerId: "",
   name: "",
   sex: "Feminino",
-  age: 30,
-  birthDate: "1996-01-01",
-  height: 1.7,
-  initialWeight: 70,
+  age: 0,
+  birthDate: "",
+  height: 0,
+  initialWeight: 0,
   photoUrl: "",
   progressFrontUrl: "",
   progressSideUrl: "",
@@ -38,7 +37,7 @@ const emptyStudent: Student = {
   notes: "",
 };
 
-export function StudentManager({ initialStudents = demoData.students }: { initialStudents?: Student[] }) {
+export function StudentManager({ initialStudents }: { initialStudents: Student[] }) {
   const [students, setStudents] = useState(initialStudents);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Student | null>(null);
@@ -50,34 +49,13 @@ export function StudentManager({ initialStudents = demoData.students }: { initia
   );
 
   function save(formData: FormData) {
-    const fallbackStudent: Student = {
-      id: editing?.id || `student-${Date.now()}`,
-      trainerId: "trainer-demo",
-      name: String(formData.get("name")),
-      sex: String(formData.get("sex")) as Sex,
-      age: Number(formData.get("age")),
-      birthDate: String(formData.get("birthDate")),
-      height: Number(formData.get("height")),
-      initialWeight: Number(formData.get("initialWeight")),
-      photoUrl: String(formData.get("photoUrl")),
-      progressFrontUrl: String(formData.get("progressFrontUrl")),
-      progressSideUrl: String(formData.get("progressSideUrl")),
-      progressBackUrl: String(formData.get("progressBackUrl")),
-      goal: String(formData.get("goal")) as Student["goal"],
-      trainingLevel: String(formData.get("trainingLevel")) as Student["trainingLevel"],
-      weeklyFrequency: Number(formData.get("weeklyFrequency")),
-      restrictions: String(formData.get("restrictions")),
-      clinicalNotes: String(formData.get("clinicalNotes")),
-      notes: String(formData.get("notes")),
-    };
-
     startTransition(async () => {
       try {
         const saved = await saveStudentAction(formData);
-        const student = saved ?? fallbackStudent;
-        setStudents((current) => (editing?.id ? current.map((item) => (item.id === editing.id ? student : item)) : [student, ...current]));
+        if (!saved) throw new Error("O banco nao retornou o aluno salvo.");
+        setStudents((current) => (editing?.id ? current.map((item) => (item.id === editing.id ? saved : item)) : [saved, ...current]));
         setEditing(null);
-        toast.success(saved ? "Aluno salvo no Supabase." : "Aluno salvo no workspace local.");
+        toast.success("Aluno salvo no banco.");
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar o aluno.");
       }
@@ -202,10 +180,10 @@ function StudentForm({ student, onSubmit }: { student: Student; onSubmit: (formD
           </SelectContent>
         </Select>
       </div>
-      <Field label="Idade" name="age" type="number" defaultValue={student.age} />
+      <Field label="Idade" name="age" type="number" defaultValue={emptyIfZero(student.age)} />
       <Field label="Nascimento" name="birthDate" type="date" defaultValue={student.birthDate} />
-      <Field label="Altura (m)" name="height" type="number" step="0.01" defaultValue={student.height} />
-      <Field label="Peso inicial (kg)" name="initialWeight" type="number" step="0.1" defaultValue={student.initialWeight} />
+      <Field label="Altura (m)" name="height" type="number" step="0.01" defaultValue={emptyIfZero(student.height)} />
+      <Field label="Peso inicial (kg)" name="initialWeight" type="number" step="0.1" defaultValue={emptyIfZero(student.initialWeight)} />
       <div className="grid gap-2">
         <Label>Objetivo</Label>
         <Select name="goal" defaultValue={student.goal}>
@@ -230,7 +208,7 @@ function StudentForm({ student, onSubmit }: { student: Student; onSubmit: (formD
           </SelectContent>
         </Select>
       </div>
-      <Field label="Frequencia semanal" name="weeklyFrequency" type="number" min={0} max={14} defaultValue={student.weeklyFrequency} />
+      <Field label="Frequencia semanal" name="weeklyFrequency" type="number" min={0} max={14} defaultValue={emptyIfZero(student.weeklyFrequency)} />
       <div className="grid gap-2 md:col-span-2">
         <Label>Foto URL</Label>
         <Input name="photoUrl" defaultValue={student.photoUrl} />
@@ -261,6 +239,10 @@ function StudentForm({ student, onSubmit }: { student: Student; onSubmit: (formD
       <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 md:col-span-2">Salvar aluno</Button>
     </form>
   );
+}
+
+function emptyIfZero(value: number) {
+  return value === 0 ? "" : value;
 }
 
 function Field(props: React.ComponentProps<"input"> & { label: string; name: string }) {

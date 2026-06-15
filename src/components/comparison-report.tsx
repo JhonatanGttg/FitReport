@@ -32,23 +32,21 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ReportExportActions, type ReportPdfData, type ReportPdfRow } from "@/components/report-export-actions";
 import { compareAssessments, generateProfessionalAnalysis, sumSkinfolds } from "@/lib/calculations";
-import { demoData } from "@/lib/demo-data";
-import { useTrainerProfile } from "@/lib/trainer-profile-store";
 import type { Assessment, Report, ReportTemplate, Student, Trainer } from "@/lib/types";
 
 type ComparisonReportProps = {
-  student?: Student;
-  first?: Assessment;
-  second?: Assessment;
-  trainerProfile?: Trainer;
+  student: Student;
+  first: Assessment;
+  second: Assessment;
+  trainerProfile: Trainer;
   savedReport?: Report | null;
   readOnly?: boolean;
 };
 
 export function ComparisonReport({
-  student = demoData.students[0],
-  first = demoData.assessments.find((item) => item.studentId === demoData.students[0].id)!,
-  second = demoData.assessments.filter((item) => item.studentId === demoData.students[0].id)[1],
+  student,
+  first,
+  second,
   trainerProfile,
   savedReport = null,
   readOnly = false,
@@ -77,14 +75,13 @@ function ComparisonReportContent({
   student: Student;
   first: Assessment;
   second: Assessment;
-  trainerProfile?: Trainer;
+  trainerProfile: Trainer;
   savedReport?: Report | null;
   readOnly: boolean;
 }) {
   const router = useRouter();
   const [isSaving, startSaving] = useTransition();
-  const { trainer: localTrainer } = useTrainerProfile();
-  const trainer = trainerProfile ?? localTrainer;
+  const trainer = trainerProfile;
   const comparison = compareAssessments(first, second);
   const auto = generateProfessionalAnalysis(student, first, second);
   const autoRecommendationsText = auto.recommendations.join("\n");

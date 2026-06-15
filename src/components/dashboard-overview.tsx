@@ -9,10 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricCard } from "@/components/metric-card";
 import { compareAssessments } from "@/lib/calculations";
-import { demoData } from "@/lib/demo-data";
 import type { AppData } from "@/lib/types";
 
-export function DashboardOverview({ data = demoData, today = "2026-06-15" }: { data?: AppData; today?: string }) {
+export function DashboardOverview({ data, today = "2026-06-15" }: { data: AppData; today?: string }) {
   const { students, assessments } = data;
   const pairs = students.map((student) => {
     const ordered = assessments.filter((item) => item.studentId === student.id).sort((a, b) => a.date.localeCompare(b.date));
@@ -58,7 +57,7 @@ export function DashboardOverview({ data = demoData, today = "2026-06-15" }: { d
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard title="Total de alunos" value={String(students.length)} detail="ativos no workspace" icon={UsersRound} />
-        <MetricCard title="Avaliacoes realizadas" value={String(assessments.length)} detail="incluindo dados demo" icon={Activity} />
+        <MetricCard title="Avaliacoes realizadas" value={String(assessments.length)} detail="sincronizadas no banco" icon={Activity} />
         <MetricCard title="Evolucao media" value={`${avgFatDelta > 0 ? "+" : ""}${avgFatDelta.toFixed(1)} p.p.`} detail="gordura corporal" icon={ArrowDownRight} />
         <MetricCard title="Massa magra media" value={`+${avgLeanDelta.toFixed(1)} kg`} detail="ganho entre avaliacoes" icon={ArrowUpRight} />
       </section>

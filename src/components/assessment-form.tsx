@@ -15,36 +15,36 @@ import { calculateBmi, calculateComposition, measurementLabels, skinfoldLabels, 
 import type { Measurements, Skinfolds, Student } from "@/lib/types";
 
 const initialMeasurements: Measurements = {
-  shoulder: 104,
-  leftArm: 30,
-  rightArm: 30,
-  waist: 78,
-  abdomen: 85,
-  hip: 100,
-  leftThigh: 56,
-  rightThigh: 56,
-  leftLeg: 37,
-  rightLeg: 37,
+  shoulder: 0,
+  leftArm: 0,
+  rightArm: 0,
+  waist: 0,
+  abdomen: 0,
+  hip: 0,
+  leftThigh: 0,
+  rightThigh: 0,
+  leftLeg: 0,
+  rightLeg: 0,
 };
 
 const initialSkinfolds: Skinfolds = {
-  triceps: 18,
-  subscapular: 20,
-  chest: 14,
-  midaxillary: 16,
-  suprailiac: 18,
-  abdominal: 22,
-  thigh: 20,
+  triceps: 0,
+  subscapular: 0,
+  chest: 0,
+  midaxillary: 0,
+  suprailiac: 0,
+  abdominal: 0,
+  thigh: 0,
 };
 
 export function AssessmentForm({ students }: { students: Student[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [studentId, setStudentId] = useState(students[0]?.id ?? "");
+  const [studentId, setStudentId] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [weight, setWeight] = useState(68);
-  const [height, setHeight] = useState(students[0]?.height ?? 1.65);
-  const [bodyFat, setBodyFat] = useState(27);
+  const [weight, setWeight] = useState(0);
+  const [height, setHeight] = useState(0);
+  const [bodyFat, setBodyFat] = useState(0);
   const [measurements, setMeasurements] = useState(initialMeasurements);
   const [skinfolds, setSkinfolds] = useState(initialSkinfolds);
 
